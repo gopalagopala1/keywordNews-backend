@@ -32,12 +32,35 @@ const createKeywordsQuery = (
 const constructQuery = (payload: NewsPayload) => {
   const { includeKeywords, excludeKeywords, country, category, page } = payload;
   const apiKey = process.env.NEWS_API_KEY;
-  console.log('apiKey: ', apiKey);
 
-  const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
-  const query = `apikey=${apiKey}&country=${country}&category=${category}`;
-  console.log('query: ', query);
-  return query;
+  if (!apiKey) {
+    throw new Error('NEWS_API_KEY environment variable is not set');
+  }
+
+  const queryParams = new URLSearchParams({
+    apikey: apiKey
+  });
+
+  if (country) {
+    queryParams.append('country', country);
+  }
+
+  if (category) {
+    queryParams.append('category', category.toLowerCase());
+  }
+
+  if (page) {
+    queryParams.append('page', page.toString());
+  }
+
+  if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
+    const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
+    queryParams.append('q', keywordsQuery);
+  }
+
+  console.log('queryParams: ', queryParams.toString());
+
+  return queryParams.toString();
 };
 
 const getNews = async (payload: NewsPayload) => {

@@ -6,9 +6,9 @@ const getNews = async (req: Request, res: Response, next: NextFunction) => {
   const defaultPayload: NewsPayload = {
     includeKeywords: [],
     excludeKeywords: [],
-    country: "in",
+    country: "", // how to get country based on user location 
     category: "world",
-    page: 1,
+    page: 0,
   };
 
   try {
