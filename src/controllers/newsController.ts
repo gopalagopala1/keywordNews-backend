@@ -8,6 +8,7 @@ const getNews = async (req: Request, res: Response, next: NextFunction) => {
     excludeKeywords: [],
     country: "", // how to get country based on user location 
     category: "world",
+    language: "en",
     page: 0,
   };
 

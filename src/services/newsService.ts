@@ -30,7 +30,7 @@ const createKeywordsQuery = (
 };
 
 const constructQuery = (payload: NewsPayload) => {
-  const { includeKeywords, excludeKeywords, country, category, page } = payload;
+  const { includeKeywords, excludeKeywords, country, category, page, language } = payload;
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
@@ -53,12 +53,16 @@ const constructQuery = (payload: NewsPayload) => {
     queryParams.append('page', page.toString());
   }
 
+  if (language) {
+    queryParams.append('language', language.toLowerCase());
+  }
+
   if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
     const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
     queryParams.append('q', keywordsQuery);
   }
 
-  console.log('queryParams: ', queryParams.toString());
+  queryParams.append('image', '1');
 
   return queryParams.toString();
 };

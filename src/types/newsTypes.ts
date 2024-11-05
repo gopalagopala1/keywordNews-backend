@@ -3,6 +3,7 @@ export type NewsPayload = {
     excludeKeywords: string[];
     country: string;
     category: string;
+    language: string;
     page: number;
 }
 
