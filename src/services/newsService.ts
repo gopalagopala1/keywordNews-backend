@@ -7,9 +7,6 @@ const createKeywordsQuery = (
   includeKeywords: string[],
   excludeKeywords: string[]
 ) => {
-
-
-
   let includeQuery = includeKeywords
     .map((keyword) => `"${keyword}"`)
     .join(" OR ");
@@ -30,39 +27,47 @@ const createKeywordsQuery = (
 };
 
 const constructQuery = (payload: NewsPayload) => {
-  const { includeKeywords, excludeKeywords, country, category, page, language } = payload;
+  const {
+    includeKeywords,
+    excludeKeywords,
+    country,
+    category,
+    page,
+    language,
+  } = payload;
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    throw new Error('NEWS_API_KEY environment variable is not set');
+    throw new Error("NEWS_API_KEY environment variable is not set");
   }
 
   const queryParams = new URLSearchParams({
-    apikey: apiKey
+    apikey: apiKey,
   });
 
   if (country) {
-    queryParams.append('country', country);
+    queryParams.append("country", country);
   }
 
   if (category) {
-    queryParams.append('category', category.toLowerCase());
+    queryParams.append("category", category.toLowerCase());
   }
 
   if (page) {
-    queryParams.append('page', page.toString());
+    queryParams.append("page", page.toString());
   }
 
   if (language) {
-    queryParams.append('language', language.toLowerCase());
+    queryParams.append("language", language.toLowerCase());
   }
 
   if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
     const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
-    queryParams.append('q', keywordsQuery);
+    queryParams.append("q", keywordsQuery);
   }
 
-  queryParams.append('image', '1');
+  queryParams.append("image", "1");
+  queryParams.append("removeduplicate", "1");
 
   return queryParams.toString();
 };
