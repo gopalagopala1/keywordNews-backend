@@ -68,6 +68,7 @@ const constructQuery = (payload: NewsPayload) => {
 
   queryParams.append("image", "1");
   queryParams.append("removeduplicate", "1");
+  queryParams.append("prioritydomain", "top");
 
   return queryParams.toString();
 };
