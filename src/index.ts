@@ -15,13 +15,6 @@ app.use(express.json());
 
 app.use(errorHandler);
 
-app.use("/news", newsRouter);
-app.use(notFound);
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
 app.get("/test", (req, res) => {
   res.send("Test World");
 });
@@ -29,5 +22,15 @@ app.get("/test", (req, res) => {
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
+
+app.use("/news", newsRouter);
+app.use(notFound);
+
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 8080;
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
 
 export default app;
