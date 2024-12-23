@@ -13,7 +13,7 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
-app.use(errorHandler);
+
 
 app.get("/test", (req, res) => {
   res.send("Test World");
@@ -24,7 +24,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/news", newsRouter);
+
 app.use(notFound);
+app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 8080;
