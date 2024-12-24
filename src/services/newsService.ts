@@ -1,5 +1,6 @@
-import { NewsPayload } from "../types/newsTypes";
 import dotenv from "dotenv";
+import supabase from "../config/supabase";
+import { NewsPayload, NewsResponse } from "../types/newsTypes";
 
 dotenv.config();
 
@@ -73,6 +74,47 @@ const constructQuery = (payload: NewsPayload) => {
   return queryParams.toString();
 };
 
+const cacheResponse = async (data: NewsResponse) => {
+  const date = new Date().toISOString().slice(0, 10);
+
+  try {
+    // Call the Supabase function directly to handle merging
+    const { error } = await supabase.rpc("merge_news_cache", {
+      p_date: date,
+      p_new_results: JSON.stringify(data.results),
+      p_next_page: data.nextPage?.toString() ?? "" ,
+    });
+
+    if (error) {
+      console.error("Error caching response:", error);
+      return null;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Cache operation failed:", error);
+    return null;
+  }
+};
+
+
+const fetchCachedResponse = async () => { 
+  const date = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase.from("cache_data").select('results, next_page').eq("date", date).single();
+
+  const rString = data?.results?.[0] ?? "[]";
+  const results = JSON.parse(rString);
+
+
+  if (error) {
+    console.error("Error fetching cached response:", error);
+    return null;
+  }
+
+  return {results, nextPage: Number(data?.next_page), status: "ok"};  
+}
+
+
 const getNews = async (payload: NewsPayload) => {
   try {
     const query = constructQuery(payload);
@@ -85,7 +127,12 @@ const getNews = async (payload: NewsPayload) => {
       },
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      return await fetchCachedResponse();
+    }
+
+    const data: NewsResponse = await response.json();
+    cacheResponse(data);
     return data;
   } catch (error) {
     console.error(error);
