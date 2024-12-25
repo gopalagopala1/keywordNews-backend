@@ -4,6 +4,11 @@ import { NewsPayload, NewsResponse } from "../types/newsTypes";
 
 dotenv.config();
 
+const getSystemLanguage = (): string => {
+  const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+  return locale.split("-")[0];
+};
+
 const createKeywordsQuery = (
   includeKeywords: string[],
   excludeKeywords: string[]
@@ -58,9 +63,8 @@ const constructQuery = (payload: NewsPayload) => {
     queryParams.append("page", page.toString());
   }
 
-  if (language) {
-    queryParams.append("language", language.toLowerCase());
-  }
+  const systemLanguage = getSystemLanguage();
+  queryParams.append("language", language ?? systemLanguage);
 
   if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
     const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
@@ -82,7 +86,7 @@ const cacheResponse = async (data: NewsResponse) => {
     const { error } = await supabase.rpc("merge_news_cache", {
       p_date: date,
       p_new_results: JSON.stringify(data.results),
-      p_next_page: data.nextPage?.toString() ?? "" ,
+      p_next_page: data.nextPage?.toString() ?? "",
     });
 
     if (error) {
@@ -97,23 +101,24 @@ const cacheResponse = async (data: NewsResponse) => {
   }
 };
 
-
-const fetchCachedResponse = async () => { 
+const fetchCachedResponse = async () => {
   const date = new Date().toISOString().slice(0, 10);
-  const { data, error } = await supabase.from("cache_data").select('results, next_page').eq("date", date).single();
+  const { data, error } = await supabase
+    .from("cache_data")
+    .select("results, next_page")
+    .eq("date", date)
+    .single();
 
   const rString = data?.results?.[0] ?? "[]";
   const results = JSON.parse(rString);
-
 
   if (error) {
     console.error("Error fetching cached response:", error);
     return null;
   }
 
-  return {results, nextPage: Number(data?.next_page), status: "ok"};  
-}
-
+  return { results, nextPage: Number(data?.next_page), status: "ok" };
+};
 
 const getNews = async (payload: NewsPayload) => {
   try {
