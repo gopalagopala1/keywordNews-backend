@@ -160,7 +160,28 @@ const fetchCachedResponse = async () => {
     .single();
 
   const results = data?.results ?? [];
-  
+
+  if (error) {
+    console.error("Error fetching cached response:", error);
+    return null;
+  }
+
+  return { results, nextPage: Number(data?.next_page), status: "ok" };
+};
+
+const fetchHappyNews = async () => {
+  const date = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("cache_data")
+    .select("results, next_page")
+    .eq("date", date)
+    .single();
+
+  const response = data?.results ?? [];
+  const results = response.filter(
+    (article: NewsDataType) => article.sentiment === "Positive"
+  );
+
   if (error) {
     console.error("Error fetching cached response:", error);
     return null;
@@ -171,6 +192,12 @@ const fetchCachedResponse = async () => {
 
 const getNews = async (payload: NewsPayload) => {
   try {
+    const isHappy = payload.isHappy;
+
+    if (isHappy) {
+      return await fetchHappyNews();
+    }
+
     const query = constructQuery(payload);
     const url = `${process.env.NEWS_API_URL}/latest?${query}`;
 
@@ -181,9 +208,9 @@ const getNews = async (payload: NewsPayload) => {
       },
     });
 
-    // if (!response.ok) {
-    return await fetchCachedResponse();
-    // }
+    if (!response.ok) {
+      return await fetchCachedResponse();
+    }
 
     const data: NewsResponse = await response.json();
 

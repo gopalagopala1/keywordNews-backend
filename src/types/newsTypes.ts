@@ -5,6 +5,7 @@ export type NewsPayload = {
     category: string;
     language: string;
     page: number;
+    isHappy: boolean;
 }
 
 export type NewsDataType = {

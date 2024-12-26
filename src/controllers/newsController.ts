@@ -10,6 +10,7 @@ const getNews = async (req: Request, res: Response, next: NextFunction) => {
     category: "world",
     language: "en",
     page: 0,
+    isHappy: false,
   };
 
   try {
