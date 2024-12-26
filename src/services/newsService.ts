@@ -170,24 +170,45 @@ const fetchCachedResponse = async () => {
 };
 
 const fetchHappyNews = async () => {
-  const date = new Date().toISOString().slice(0, 10);
-  const { data, error } = await supabase
-    .from("cache_data")
-    .select("results, next_page")
-    .eq("date", date)
-    .single();
+  const dates = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    return date.toISOString().slice(0, 10);
+  });
 
-  const response = data?.results ?? [];
-  const results = response.filter(
-    (article: NewsDataType) => article.sentiment === "Positive"
-  );
+  const allResults = [];
+  let nextPage = null;
 
-  if (error) {
-    console.error("Error fetching cached response:", error);
-    return null;
+  for (const date of dates) {
+    const { data, error } = await supabase
+      .from("cache_data")
+      .select("results, next_page")
+      .eq("date", date)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching data for ${date}:`, error);
+      continue;
+    }
+
+    if (data?.results) {
+      const positiveNews = data.results.filter(
+        (article: NewsDataType) => article.sentiment === "Positive"
+      );
+      allResults.push(...positiveNews);
+    }
+
+    // Store the next_page from most recent date only
+    if (date === dates[0] && data?.next_page) {
+      nextPage = Number(data.next_page);
+    }
   }
 
-  return { results, nextPage: Number(data?.next_page), status: "ok" };
+  return {
+    results: allResults,
+    nextPage,
+    status: allResults.length > 0 ? "ok" : "no_results"
+  };
 };
 
 const getNews = async (payload: NewsPayload) => {
