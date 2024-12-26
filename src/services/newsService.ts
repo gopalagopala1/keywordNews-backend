@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import supabase from "../config/supabase";
-import { NewsPayload, NewsResponse } from "../types/newsTypes";
+import { NewsDataType, NewsPayload, NewsResponse } from "../types/newsTypes";
+import geminiService from "./geminiService";
 
 dotenv.config();
 
@@ -78,22 +79,71 @@ const constructQuery = (payload: NewsPayload) => {
   return queryParams.toString();
 };
 
+const updateSentimentToData = (
+  data: NewsDataType[],
+  sentiments: {
+    article_id: string;
+    sentiment: "Positive" | "Negative" | "Neutral";
+  }[]
+) => {
+  return data.map((article) => {
+    const sentiment = sentiments.find(
+      (sentiment) => sentiment.article_id === article.article_id
+    );
+
+    return {
+      ...article,
+      sentiment: sentiment?.sentiment ?? "Neutral",
+    };
+  });
+};
+
 const cacheResponse = async (data: NewsResponse) => {
   const date = new Date().toISOString().slice(0, 10);
 
   try {
-    // Call the Supabase function directly to handle merging
-    const { error } = await supabase.rpc("merge_news_cache", {
-      p_date: date,
-      p_new_results: JSON.stringify(data.results),
-      p_next_page: data.nextPage?.toString() ?? "",
-    });
+    const sentiments = (await geminiService.getSentiment(data.results)) ?? [];
+    const mergedData = updateSentimentToData(data.results, sentiments);
 
-    if (error) {
-      console.error("Error caching response:", error);
-      return null;
+    const { data: existingCache } = await supabase
+      .from("cache_data")
+      .select("results")
+      .eq("date", date)
+      .single();
+
+    if (!existingCache) {
+      const { error: insertError } = await supabase.from("cache_data").insert({
+        date,
+        results: mergedData,
+        next_page: data.nextPage?.toString() ?? "",
+      });
+
+      if (insertError) throw insertError;
+      return true;
     }
 
+    const existingData = existingCache.results ?? [];
+
+    const combinedResults = [...existingData, ...mergedData];
+
+    // Create a Map to ensure unique articles by article_id
+    const uniqueResultsMap = new Map<string, any>();
+    combinedResults.forEach((article) => {
+      uniqueResultsMap.set(article.article_id, article);
+    });
+
+    // Convert the Map back to an array
+    const uniqueResults = Array.from(uniqueResultsMap.values());
+
+    const { error: updateError } = await supabase
+      .from("cache_data")
+      .update({
+        results: uniqueResults,
+        next_page: data.nextPage?.toString() ?? "",
+      })
+      .eq("date", date);
+
+    if (updateError) throw updateError;
     return true;
   } catch (error) {
     console.error("Cache operation failed:", error);
@@ -109,9 +159,8 @@ const fetchCachedResponse = async () => {
     .eq("date", date)
     .single();
 
-  const rString = data?.results?.[0] ?? "[]";
-  const results = JSON.parse(rString);
-
+  const results = data?.results ?? [];
+  
   if (error) {
     console.error("Error fetching cached response:", error);
     return null;
@@ -132,11 +181,12 @@ const getNews = async (payload: NewsPayload) => {
       },
     });
 
-    if (!response.ok) {
-      return await fetchCachedResponse();
-    }
+    // if (!response.ok) {
+    return await fetchCachedResponse();
+    // }
 
     const data: NewsResponse = await response.json();
+
     cacheResponse(data);
     return data;
   } catch (error) {
