@@ -223,3 +223,8 @@ export const categories: Record<string, string> = {
     tourism: "Tourism",
     world: "World"
 }   
+
+export const errorMessages: Record<string, string> = {
+    'cached_response': 'Api limit exceeded. You are viewing cached response. Please try after sometime for fresh data',
+    'no_results': 'No results found specific to your search. Please try different query'
+}

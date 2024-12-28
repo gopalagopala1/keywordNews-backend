@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import supabase from "../config/supabase";
 import { NewsDataType, NewsPayload, NewsResponse } from "../types/newsTypes";
+import { errorMessages } from "../utils/utils";
 import geminiService from "./geminiService";
 
 dotenv.config();
@@ -65,7 +66,8 @@ const constructQuery = (payload: NewsPayload) => {
   }
 
   const systemLanguage = getSystemLanguage();
-  queryParams.append("language", language ?? systemLanguage);
+  const languageCode = language || systemLanguage;
+  queryParams.append("language", languageCode);
 
   if (includeKeywords.length > 0 || excludeKeywords.length > 0) {
     const keywordsQuery = createKeywordsQuery(includeKeywords, excludeKeywords);
@@ -166,7 +168,12 @@ const fetchCachedResponse = async () => {
     return null;
   }
 
-  return { results, nextPage: Number(data?.next_page), status: "ok" };
+  return {
+    results,
+    nextPage: Number(data?.next_page),
+    status: "ok",
+    errorMessage: errorMessages["cached_response"],
+  };
 };
 
 const fetchHappyNews = async () => {
@@ -207,7 +214,7 @@ const fetchHappyNews = async () => {
   return {
     results: allResults,
     nextPage,
-    status: allResults.length > 0 ? "ok" : "no_results"
+    status: allResults.length > 0 ? "ok" : "no_results",
   };
 };
 
@@ -230,10 +237,15 @@ const getNews = async (payload: NewsPayload) => {
     });
 
     if (!response.ok) {
-      return await fetchCachedResponse();
+    return await fetchCachedResponse();
     }
 
     const data: NewsResponse = await response.json();
+    
+    if(data.results.length === 0){
+      const cachedResponse = await fetchCachedResponse();
+      return {...cachedResponse, errorMessage: errorMessages['no_results']}
+    }
 
     cacheResponse(data);
     return data;

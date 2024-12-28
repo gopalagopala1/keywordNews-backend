@@ -39,5 +39,6 @@ export type NewsDataType = {
   export type NewsResponse = {
     status: string;
     results: NewsDataType[];
-    nextPage: number
+    nextPage: number;
+    errorMessage: string;
   }
