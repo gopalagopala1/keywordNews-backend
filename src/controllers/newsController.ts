@@ -14,8 +14,9 @@ const getNews = async (req: Request, res: Response, next: NextFunction) => {
   };
 
   try {
+    const ip = req.clientIP;
     const payload: NewsPayload = { ...defaultPayload, ...req.body };
-    const news = await newsService.getNews(payload);
+    const news = await newsService.getNews(payload, ip);
     return (res.status(200)).json(news);
   } catch (error) {
     console.error(error);

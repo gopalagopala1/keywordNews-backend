@@ -228,3 +228,21 @@ export const errorMessages: Record<string, string> = {
     'cached_response': 'Api limit exceeded. You are viewing cached response. Please try after sometime for fresh data',
     'no_results': 'No results found specific to your search. Please try different query'
 }
+
+export const IP_PATTERNS = {
+    IPV4_PRIVATE: /^(?:10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|169\.254\.|127\.)/,
+    IPV6_LOOPBACK: /^::1$|^fe80::1$/,
+    IPV6_PRIVATE: /^f[cd][0-9a-f]{2}:/i,
+    IPV6_LINK_LOCAL: /^fe80:/i,
+    IPV4_MAPPED_IPV6_PRIVATE: /^::ffff:(10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.)/i
+};
+
+export const isPrivateOrLocalIP = (ip: string): boolean => {
+    ip = ip.replace(/^\[|\]$/g, '');
+
+    if (ip === '::1' || ip === '127.0.0.1' || ip === 'localhost') {
+        return true;
+    }
+
+    return Object.values(IP_PATTERNS).some(pattern => pattern.test(ip));
+};

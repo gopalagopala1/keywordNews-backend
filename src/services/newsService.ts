@@ -1,14 +1,29 @@
 import dotenv from "dotenv";
 import supabase from "../config/supabase";
 import { NewsDataType, NewsPayload, NewsResponse } from "../types/newsTypes";
-import { errorMessages } from "../utils/utils";
+import { errorMessages, isPrivateOrLocalIP } from "../utils/utils";
 import geminiService from "./geminiService";
+import geoip from "geoip-lite";
 
 dotenv.config();
 
 const getSystemLanguage = (): string => {
   const locale = Intl.DateTimeFormat().resolvedOptions().locale;
   return locale.split("-")[0];
+};
+
+const getCountry = (ip: string) => {
+  if (isPrivateOrLocalIP(ip)) {
+    return "";
+  }
+
+  const geoData = geoip.lookup(ip);
+
+  if (!geoData) {
+    return "";
+  }
+
+  return geoData.country;
 };
 
 const createKeywordsQuery = (
@@ -34,7 +49,7 @@ const createKeywordsQuery = (
   return `${includeQuery} ${excludeQuery}`;
 };
 
-const constructQuery = (payload: NewsPayload) => {
+const constructQuery = (payload: NewsPayload, ip: string) => {
   const {
     includeKeywords,
     excludeKeywords,
@@ -53,9 +68,10 @@ const constructQuery = (payload: NewsPayload) => {
     apikey: apiKey,
   });
 
-  if (country) {
-    queryParams.append("country", country);
-  }
+  const systemCountry = getCountry(ip);
+  const userCountry = country || systemCountry;
+  console.log("userCountry", userCountry);
+  queryParams.append("country", userCountry);
 
   if (category) {
     queryParams.append("category", category.toLowerCase());
@@ -218,7 +234,7 @@ const fetchHappyNews = async () => {
   };
 };
 
-const getNews = async (payload: NewsPayload) => {
+const getNews = async (payload: NewsPayload, ip: string) => {
   try {
     const isHappy = payload.isHappy;
 
@@ -226,7 +242,7 @@ const getNews = async (payload: NewsPayload) => {
       return await fetchHappyNews();
     }
 
-    const query = constructQuery(payload);
+    const query = constructQuery(payload, ip);
     const url = `${process.env.NEWS_API_URL}/latest?${query}`;
 
     const response = await fetch(url, {
@@ -237,14 +253,14 @@ const getNews = async (payload: NewsPayload) => {
     });
 
     if (!response.ok) {
-    return await fetchCachedResponse();
+      return await fetchCachedResponse();
     }
 
     const data: NewsResponse = await response.json();
-    
-    if(data.results.length === 0){
+
+    if (data.results.length === 0) {
       const cachedResponse = await fetchCachedResponse();
-      return {...cachedResponse, errorMessage: errorMessages['no_results']}
+      return { ...cachedResponse, errorMessage: errorMessages["no_results"] };
     }
 
     cacheResponse(data);

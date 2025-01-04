@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import errorHandler from "./middleware/error";
+import finfIpAddress from "./middleware/findIp";
 import notFound from "./middleware/notFound";
 import newsRouter from "./routes/news";
 
@@ -22,7 +23,7 @@ app.get("/test", (req, res) => {
   res.send("Test World");
 });
 
-app.use("/news", newsRouter);
+app.use("/news", finfIpAddress,  newsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
