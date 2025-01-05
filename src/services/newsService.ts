@@ -12,19 +12,19 @@ const getSystemLanguage = (): string => {
   return locale.split("-")[0];
 };
 
-const getCountry = (ip: string) => {
-  if (isPrivateOrLocalIP(ip)) {
-    return "";
-  }
+// const getCountry = (ip: string) => {
+//   if (isPrivateOrLocalIP(ip)) {
+//     return "";
+//   }
 
-  const geoData = geoip.lookup(ip);
+//   const geoData = geoip.lookup(ip);
 
-  if (!geoData) {
-    return "";
-  }
+//   if (!geoData) {
+//     return "";
+//   }
 
-  return geoData.country;
-};
+//   return geoData.country;
+// };
 
 const createKeywordsQuery = (
   includeKeywords: string[],
@@ -68,10 +68,14 @@ const constructQuery = (payload: NewsPayload, ip: string) => {
     apikey: apiKey,
   });
 
-  const systemCountry = getCountry(ip);
-  const userCountry = country || systemCountry;
-  console.log("userCountry", userCountry);
-  queryParams.append("country", userCountry);
+  // const systemCountry = getCountry(ip);
+  // const userCountry = country || systemCountry;
+  // console.log("userCountry", userCountry);
+  // queryParams.append("country", userCountry);
+
+  if(country){
+    queryParams.append('country', country)
+  }
 
   if (category) {
     queryParams.append("category", category.toLowerCase());
