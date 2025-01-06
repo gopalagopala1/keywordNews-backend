@@ -1,9 +1,9 @@
 import winston from 'winston';
 import { Request, Response } from 'express';
-import { CustomLogger } from '../types/logger.types';
+import { CustomLogger, ErrorLevelType } from '../types/logger.types';
 
 // Define custom levels
-const levels = {
+const levels: Record<ErrorLevelType, number> = {
   error: 0,
   warn: 1,
   info: 2,
@@ -12,7 +12,7 @@ const levels = {
 };
 
 // Define level colors
-const colors = {
+const colors: Record<ErrorLevelType, string> = {
   error: 'red',
   warn: 'yellow',
   info: 'green',

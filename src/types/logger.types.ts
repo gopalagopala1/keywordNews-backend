@@ -11,5 +11,4 @@ export type ErrorLevelType =
   | "warn"
   | "info"
   | "http"
-  | "debug"
-  | "trace";
+  | "debug";
