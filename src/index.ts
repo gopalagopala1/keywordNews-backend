@@ -5,6 +5,7 @@ import errorHandler from "./middleware/error";
 import finfIpAddress from "./middleware/findIp";
 import notFound from "./middleware/notFound";
 import newsRouter from "./routes/news";
+import { safeRequestLogger } from './middleware/logger.middleware'
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ const port = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
-
+app.use(safeRequestLogger);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -29,7 +30,6 @@ app.use(notFound);
 app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'production') {
-  const port = process.env.PORT || 8080;
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
