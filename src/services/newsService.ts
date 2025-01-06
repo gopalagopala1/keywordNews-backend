@@ -1,11 +1,9 @@
-import dotenv from "dotenv";
+import env from "../config/env.config";
 import supabase from "../config/supabase";
 import { NewsDataType, NewsPayload, NewsResponse } from "../types/newsTypes";
 import { errorMessages, isPrivateOrLocalIP } from "../utils/utils";
 import geminiService from "./geminiService";
 import geoip from "geoip-lite";
-
-dotenv.config();
 
 const getSystemLanguage = (): string => {
   const locale = Intl.DateTimeFormat().resolvedOptions().locale;
@@ -58,7 +56,7 @@ const constructQuery = (payload: NewsPayload, ip: string) => {
     page,
     language,
   } = payload;
-  const apiKey = process.env.NEWS_API_KEY;
+  const apiKey = env.NEWS_API_KEY;
 
   if (!apiKey) {
     throw new Error("NEWS_API_KEY environment variable is not set");
@@ -73,8 +71,8 @@ const constructQuery = (payload: NewsPayload, ip: string) => {
   // console.log("userCountry", userCountry);
   // queryParams.append("country", userCountry);
 
-  if(country){
-    queryParams.append('country', country)
+  if (country) {
+    queryParams.append("country", country);
   }
 
   if (category) {

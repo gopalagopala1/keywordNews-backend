@@ -1,21 +1,21 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
+import env from "./config/env.config";
+import logger from "./config/logger.config";
 import errorHandler from "./middleware/error";
-import finfIpAddress from "./middleware/findIp";
+import findIpAddress from "./middleware/findIp";
+import { safeRequestLogger } from './middleware/logger.middleware';
 import notFound from "./middleware/notFound";
 import newsRouter from "./routes/news";
-import { safeRequestLogger } from './middleware/logger.middleware'
-
-dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 8080;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(safeRequestLogger);
 
+// Basic routes
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
@@ -24,15 +24,36 @@ app.get("/test", (req, res) => {
   res.send("Test World");
 });
 
-app.use("/news", finfIpAddress,  newsRouter);
+// API routes
+app.use("/news", findIpAddress, newsRouter);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+// Start server (only in non-production environment)
+if (env.NODE_ENV !== 'production') {
+  app.listen(env.PORT, () => {
+    logger.info(`Server started`, {
+      port: env.PORT,
+      environment: env.NODE_ENV,
+    });
   });
 }
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception:', { 
+    error: error.message,
+    stack: error.stack 
+  });
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled Rejection:', { reason });
+  process.exit(1);
+});
 
 export default app;
