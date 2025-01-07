@@ -2,11 +2,11 @@ import cors from "cors";
 import express from "express";
 import env from "./config/env.config";
 import logger from "./config/logger.config";
-import errorHandler from "./middleware/error";
-import findIpAddress from "./middleware/findIp";
+import errorHandler from "./middleware/error.middleware";
+import findIpAddress from "./middleware/findIp.middleware";
 import { safeRequestLogger } from './middleware/logger.middleware';
-import notFound from "./middleware/notFound";
-import newsRouter from "./routes/news";
+import notFound from "./middleware/notFound.middleware";
+import newsRouter from "./routes/news.routes";
 
 const app = express();
 

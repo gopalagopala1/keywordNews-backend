@@ -1,7 +1,7 @@
 import env from "../config/env.config";
-import supabase from "../config/supabase";
-import { NewsDataType, NewsPayload, NewsResponse } from "../types/newsTypes";
-import { errorMessages, isPrivateOrLocalIP } from "../utils/utils";
+import supabase from "../config/supabase.config";
+import { NewsDataType, NewsPayload, NewsResponse } from "../types/news.types";
+import { errorMessages, isPrivateOrLocalIP } from "../utils/general.utils";
 import geminiService from "./geminiService";
 import geoip from "geoip-lite";
 

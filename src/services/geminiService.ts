@@ -1,5 +1,5 @@
-import model from "../config/gemini";
-import { NewsDataType, NewsResponse } from "../types/newsTypes";
+import model from "../config/gemini.config";
+import { NewsDataType, NewsResponse } from "../types/news.types";
 
 const createPrompt = (data: NewsDataType[]) => {
   const role = `You are an AI trained to analyze news articles and determine their sentiment. I will provide you with some news articles separated by #__#. Each article contains the following fields:
@@ -25,10 +25,13 @@ const createPrompt = (data: NewsDataType[]) => {
 
 const getSentiment = async (
   data: NewsDataType[]
-): Promise<{
-  article_id: string;
-  sentiment: "Positive" | "Negative" | "Neutral";
-}[]| null> => {
+): Promise<
+  | {
+      article_id: string;
+      sentiment: "Positive" | "Negative" | "Neutral";
+    }[]
+  | null
+> => {
   try {
     const prompt = createPrompt(data);
     const result = await model.generateContent(prompt);

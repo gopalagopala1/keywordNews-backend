@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import newsService from "../services/newsService";
-import { NewsPayload } from "../types/newsTypes";
+import { NewsPayload } from "../types/news.types";
 import logger from "../config/logger.config";
 
 const getNews = async (req: Request, res: Response, next: NextFunction) => {
